@@ -547,6 +547,7 @@ fn parse_extern_fn(
     let mut rust_name = None;
     let mut self_type = None;
     let mut attrs = attrs.clone();
+    let mut is_constructor = false;
     attrs.extend(attrs::parse(
         cx,
         mem::take(&mut foreign_fn.attrs),
@@ -557,6 +558,7 @@ fn parse_extern_fn(
             cxx_name: Some(&mut cxx_name),
             rust_name: Some(&mut rust_name),
             self_type: Some(&mut self_type),
+            is_constructor: Some(&mut is_constructor),
             ..Default::default()
         },
     ));
@@ -703,10 +705,36 @@ fn parse_extern_fn(
     let paren_token = foreign_fn.sig.paren_token;
     let semi_token = foreign_fn.semi_token;
 
+    /*let is_constructor = match &ret {
+        Some(Type::Ident(ident)) => ident.rust == "Self" && kind == FnKind::Assoc(name.ident()),
+        _ => false,
+    };*/
+
+    /*let is_constructor = match &ret {
+        Some(Type::Ident(ident)) => {
+            println!("ident: {}", ident.rust);
+            ident.rust == "Self"
+        }
+        _ => false,
+    };*/
+
+    /*if attrs.lint.contains(&Attribute { pound_token: Token![#], style: AttrStyle::Outer, bracket_token: Token![], meta: Meta::Path() }) && !is_constructor {
+        cx.error(
+            &foreign_fn.sig.ident,
+            "the `constructor` attribute can only be applied to functions that return `Self`",
+        );
+    }*/
+
+    /*let is_constructor = attrs
+    .lint
+    .iter()
+    .any(|attr| attr.path().is_ident("constructor"));*/
+
     Ok(match lang {
         Lang::Cxx | Lang::CxxUnwind => Api::CxxFunction,
         Lang::Rust => Api::RustFunction,
     }(ExternFn {
+        is_constructor,
         cfg,
         lang,
         doc,
